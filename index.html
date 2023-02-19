@@ -4,19 +4,23 @@
         <title>Tsnip</title>
 
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link href="css/tsnip.css" type="text/css" rel="stylesheet" />
+        <link href="css/tsnip.min.css" type="text/css" rel="stylesheet" />
     </head>
     <body>
         <header id="tsnip-header">
             <h1>TSnip <span>Snippet Keeper</span></h1>
+            <div class="toolbar">
+                <button class="btn tsnip-delete">Delete Snippet</button>
+                <button class="btn tsnip-new">+ New Snippet</button>
+            </div>
         </header>
         <aside id="tsnip-menu">
             <h2>Snippets</h2>
             <ul id="tsnip-list"></ul>
-            <button id="tsnip-new">+ New Snippet</button>
+            <button class="btn tsnip-new">+ New Snippet</button>
         </aside>
         <main id="tsnip">
-            <textarea id="tsnip-editor" spellcheck="false"></textarea>
+            <textarea id="tsnip-editor" spellcheck="false" placeholder="Type or paste your snippet text here. Rename snippets by editing their title in the left menu."></textarea>
         </main>
         <footer>
             <script src="js\tsnip.js" type="text/javascript"></script>

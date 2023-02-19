@@ -13,6 +13,11 @@
     --color-primary: #117bed;
     --color-light:#efefef;
     --color-light-shade: #cdcdcd;
+    --color-danger:#a82222;
+}
+
+a {
+    color: var(--color-primary);
 }
 
 header#tsnip-header {
@@ -21,12 +26,33 @@ header#tsnip-header {
     top:0;
     padding:8px 16px;
     z-index:99;
-    border-bottom:2px solid var(--color-light-shade);
-    background:var(--color-light);
+    background:var(--color-text);
+    color:var(--color-light);
 }
 header#tsnip-header h1 > span {
     font-size:initial;
     font-style: italic;
+}
+#tsnip-header h1 {
+    display:inline-block;
+    vertical-align: middle;
+    text-shadow: 1px 2px 3px rgba(0,0,0,.5);
+}
+
+#tsnip-header .btn {
+    border-radius: 1em;
+    padding:8px 16px;
+    width:auto;
+    margin:0 0 0 4px;
+    box-shadow:1px 2px rgba(0,0,0,0.25);
+}
+#tsnip-header .toolbar {
+    position: absolute;
+    right:16px;
+    top:50%;
+    transform: translate(0,-50%);
+    max-height: 100%;
+    width:auto;
 }
 
 aside#tsnip-menu {
@@ -39,23 +65,26 @@ aside#tsnip-menu {
     padding:72px 0 8px;
     z-index:1;
     background:var(--color-light-shade);
-    text-align: center;
 }
 
-#tsnip-new {
+.btn {
     border:0;
     background:var(--color-primary);
     color:var(--color-light);
-    width:100%;
-    display:block;
+    display:inline-block;
     font-size:1em;
     padding:8px;
     text-align: center;
     cursor: pointer;
 }
-#tsnip-new:hover {
+.btn:hover {
     text-decoration: underline;
     opacity: 0.9;
+}
+
+#tsnip-menu .tsnip-new {
+    width:100%;
+    display:block;
 }
 
 #tsnip-list {
@@ -65,7 +94,6 @@ aside#tsnip-menu {
 #tsnip-list > li {
     display: block;
     width:100%;
-    padding:8px 16px;
     overflow-x:auto;
     overflow-y:hidden;
     white-space: nowrap;
@@ -76,6 +104,9 @@ aside#tsnip-menu {
     border-left:6px solid transparent;
     border-top:1px solid transparent;
     border-bottom:1px solid transparent;
+    cursor:text;
+    font-size:10pt;
+    padding:4px 8px;
 }
 #tsnip-list > li:hover {
     background:var(--color-light);
@@ -86,11 +117,11 @@ aside#tsnip-menu {
 #tsnip-list > li.current {
     background:var(--color-light);
     border-color:var(--color-primary);
-    font-weight: bold;
+    color:var(--color-primary);
 }
 
 main#tsnip {
-    padding:64px 0 16px 216px;
+    padding:72px 0 16px 216px;
     background:#fff;
     position:fixed;
     width:100%;
@@ -99,21 +130,30 @@ main#tsnip {
     overflow-y:auto;
 }
 
-textarea#tsnip-editor {
+#tsnip-editor {
     display: block;
     width:100%;
     resize: none;
     height:100%;
     border:0;
-    font-size:16pt;
+    font-size:12pt;
     font-family: 'Courier New', Courier, monospace;
-    padding:16px;
     overflow:auto;
-    white-space: nowrap;
+    white-space: pre;
+    word-wrap:normal;
     outline:transparent;
 }
 
 aside h2 {
     margin-bottom:8px;
+    text-align: center;
 }
 
+.text-danger {
+    color:var(--color-danger);
+}
+
+.tsnip-delete {
+    background-color: var(--color-danger);
+    visibility: hidden;
+}

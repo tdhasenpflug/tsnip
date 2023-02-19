@@ -1,14 +1,13 @@
 (() => {
     const list = document.getElementById("tsnip-list")
     const editor = document.getElementById("tsnip-editor")
-    const newButton = document.getElementById("tsnip-new")
+    const newButtons = document.getElementsByClassName("tsnip-new")
+    const deleteButtons = document.getElementsByClassName("tsnip-delete")
 
-    const storageKey = "tsnip";
+    const storageKey = "tsnip"
+    const heartbeat = 1000
 
-    const current = {
-        snippet: null,
-        dct: null
-    }
+    let currentSnip = null;
 
     function save_to_storage() {
         let s = []
@@ -18,22 +17,51 @@
                 store: c.dataset.store
             })
         })
-        console.log(s)
-        localStorage.setItem(storageKey, JSON.stringify(s))
+        if (s.length < 1) {
+            localStorage.removeItem(storageKey)
+        } else {
+            localStorage.setItem(storageKey, JSON.stringify(s))
+        }
     }
 
     function save_editor() {
         if (editor.value == null || editor.value == "") {
+            let ni = 0
+            if (currentSnip != null) {
+                ni = Array.from(list.childNodes).indexOf(currentSnip)
+                list.removeChild(currentSnip)
+                editor.value = ""
+                currentSnip = null
+                if (ni > list.childNodes.length - 1) {
+                    ni = list.childNodes.length - 1
+                }
+            }
+            if (list.childNodes.length > 0) {
+                currentSnip = list.childNodes.item(ni)
+                editor.value = atob(currentSnip.dataset.store)
+                currentSnip.classList = ['current']
+                Array.from(deleteButtons).forEach(bt => {
+                    bt.setAttribute('style', 'visibility:visible')
+                })
+            } else {
+                Array.from(deleteButtons).forEach(bt => {
+                    bt.setAttribute('style', 'visibility:hidden')
+                })
+            }
             return
         }
         const data = btoa(editor.value)
 
-        if (current.snippet != null) {
-            current.snippet.dataset.store = data
+        if (currentSnip != null) {
+            currentSnip.dataset.store = data
         } else {
-            let nmi = make_li(make_key('New TSnip'), editor.value.slice(0,64), data)
+            let title = editor.value.slice(0,64)
+            if (title.indexOf('\n') >= 0) {
+                title = title.slice(0,title.indexOf('\n'))
+            }
+            let nmi = make_li(make_key(title), title, data)
             list.appendChild(nmi)
-            current.snippet = nmi
+            currentSnip = nmi
             list.childNodes.forEach(el => {
                 el.classList = []
             })
@@ -46,37 +74,46 @@
     function make_key(decoded_key) {
         return btoa(decoded_key + '-' + Date.now())
     }
+
     function remove_key_tag(encoded_key) {
         let s = atob(encoded_key)
-        console.log(s)
-        s = s.slice(0, s.lastIndexOf('-'))
-        console.log(s)
-        return s
+        return s.slice(0, s.lastIndexOf('-'))
     }
 
     function make_li(key, title, store) {
         let li = document.createElement('li')
         li.dataset.store = store
         li.dataset.key = key
-        li.innerHTML = title
+        li.innerText = title
         li.contentEditable = true
         li.spellcheck = false
+
+        let liautosave = null
+        li.onkeyup = function(e) {
+            li.dataset.key = make_key(li.innerText)
+            if (liautosave != null) {
+                clearTimeout(liautosave)
+            }
+            liautosave = setTimeout(() => {
+                save_to_storage()
+            }, heartbeat);
+        }
         li.onclick = function(e) {
+            save_editor()
             list.childNodes.forEach(el => {
                 el.classList = []
             })
             li.classList = ['current']
-            save_editor()
-            current.snippet = this
+            currentSnip = this
             editor.value = atob(this.dataset.store)
-        }
-        li.onkeyup = function(e) {
-            this.dataset.key = make_key(li.innerHTML)
-            save_to_storage()
         }
         return li
     }
     
+    /**
+     * Insert tabs into editor
+     * @param {event} e 
+     */
     editor.onkeydown = (e) => {
         if (e.key == 'Tab' || e.code == "Tab") {
             e.preventDefault()
@@ -85,34 +122,82 @@
             editor.selectionStart = editor.selectionEnd = si + 1
         }
     }
-    let doSave = null;
+
+    /**
+     * Editor autosave
+     */
+    let autosave = null;
     editor.onkeyup = (e) => {
-        if (doSave != null) {
-            clearTimeout(doSave)
+        if (autosave != null) {
+            clearTimeout(autosave)
         }
-        doSave = setTimeout(save_editor, 1500);
+        autosave = setTimeout(save_editor, heartbeat);
     }
 
-    newButton.onclick = () => {
-        current.snippet = null
-        editor.value = ""
-    }
+    /**
+     * Set up + New Snippet buttons
+     */
+    Array.from(newButtons).forEach(b => {
+        b.onclick = () => {
+            save_editor()
+            currentSnip = null
+            editor.value = ""
+            list.childNodes.forEach(el => {
+                el.classList = []
+            })
+        }
+    })
 
+    /**
+     * Set up delete buttons
+     */
+    Array.from(deleteButtons).forEach(b => {
+        b.onclick = () => {
+            list.removeChild(currentSnip)
+            currentSnip = null
+            editor.value = ""
+            save_to_storage()
 
-    // on load
+            if (list.childNodes.length > 0) {
+                currentSnip = list.firstChild
+                editor.value = atob(currentSnip.dataset.store)
+                currentSnip.classList = ['current']
+                Array.from(deleteButtons).forEach(bt => {
+                    bt.setAttribute('style', 'visibility:visible')
+                })
+            } else {
+                Array.from(deleteButtons).forEach(bt => {
+                    bt.setAttribute('style', 'visibility:hidden')
+                })
+            }
+
+            save_editor()
+        }
+    })
+
+    /**
+     * Load snippets from local storage
+     */
     const saved = localStorage.getItem(storageKey)
-    console.log(saved)
     if (saved) {
         const jsave = JSON.parse(saved)
         for(let o of jsave) {
-            console.log(o)
             let li = make_li(o.key, remove_key_tag(o.key), o.store || "")
             list.appendChild(li)
         }
-        current.snippet = list.lastChild
-        editor.value = atob(current.snippet.dataset.store)
-        
-        list.lastChild.classList = ['current']
+    }
+
+    if (list.childNodes.length > 0) {
+        currentSnip = list.firstChild
+        editor.value = atob(currentSnip.dataset.store)
+        currentSnip.classList = ['current']
+        Array.from(deleteButtons).forEach(bt => {
+            bt.setAttribute('style', 'visibility:visible')
+        })
+    } else {
+        Array.from(deleteButtons).forEach(bt => {
+            bt.setAttribute('style', 'visibility:hidden')
+        })
     }
 
 })()
