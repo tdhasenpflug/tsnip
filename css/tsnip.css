@@ -1,0 +1,119 @@
+* {
+    margin:0;
+    padding:0;
+    box-sizing: border-box;
+}
+
+:root {
+    font-size: 14pt;
+    color:#3f3f3f;
+    font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
+    font-weight: 300;
+    --color-text: #3f3f3f;
+    --color-primary: #117bed;
+    --color-light:#efefef;
+    --color-light-shade: #cdcdcd;
+}
+
+header#tsnip-header {
+    position: fixed;
+    width:100%;
+    top:0;
+    padding:8px 16px;
+    z-index:99;
+    border-bottom:2px solid var(--color-light-shade);
+    background:var(--color-light);
+}
+header#tsnip-header h1 > span {
+    font-size:initial;
+    font-style: italic;
+}
+
+aside#tsnip-menu {
+    position: fixed;
+    height:100%;
+    width:200px;
+    top:0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding:72px 0 8px;
+    z-index:1;
+    background:var(--color-light-shade);
+    text-align: center;
+}
+
+#tsnip-new {
+    border:0;
+    background:var(--color-primary);
+    color:var(--color-light);
+    width:100%;
+    display:block;
+    font-size:1em;
+    padding:8px;
+    text-align: center;
+    cursor: pointer;
+}
+#tsnip-new:hover {
+    text-decoration: underline;
+    opacity: 0.9;
+}
+
+#tsnip-list {
+    list-style: none;
+    margin:8px 0;
+}
+#tsnip-list > li {
+    display: block;
+    width:100%;
+    padding:8px 16px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    white-space: nowrap;
+    cursor: pointer;
+    scrollbar-width: none;
+    outline:transparent;
+    border-right:6px solid transparent;
+    border-left:6px solid transparent;
+    border-top:1px solid transparent;
+    border-bottom:1px solid transparent;
+}
+#tsnip-list > li:hover {
+    background:var(--color-light);
+}
+#tsnip-list > li::-webkit-scrollbar {
+    display: none;
+}
+#tsnip-list > li.current {
+    background:var(--color-light);
+    border-color:var(--color-primary);
+    font-weight: bold;
+}
+
+main#tsnip {
+    padding:64px 0 16px 216px;
+    background:#fff;
+    position:fixed;
+    width:100%;
+    height:100%;
+    overflow-x:hidden;
+    overflow-y:auto;
+}
+
+textarea#tsnip-editor {
+    display: block;
+    width:100%;
+    resize: none;
+    height:100%;
+    border:0;
+    font-size:16pt;
+    font-family: 'Courier New', Courier, monospace;
+    padding:16px;
+    overflow:auto;
+    white-space: nowrap;
+    outline:transparent;
+}
+
+aside h2 {
+    margin-bottom:8px;
+}
+
