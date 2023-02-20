@@ -1,11 +1,6 @@
 (() => {
     const list = document.getElementById("tsnip-list")
     const editor = document.getElementById("tsnip-editor")
-    const newButtons = document.getElementsByClassName("tsnip-new")
-    const deleteButtons = document.getElementsByClassName("tsnip-delete")
-    const saveLabel = document.getElementById("tsnip-save-label")
-    const deleteLabel = document.getElementById("tsnip-delete-label")
-
     const storageKey = "tsnip"
     const heartbeat = 1000
 
@@ -32,72 +27,16 @@
         }
         load_snip(null)
         editor.focus()
-        deleteButtonVisibility(false)
-    }
-
-    function deleteButtonVisibility(val) {
-        if (val) {
-            Array.from(deleteButtons).forEach(bt => {
-                bt.setAttribute('style', 'visibility:visible')
-            })
-        } else {
-            Array.from(deleteButtons).forEach(bt => {
-                bt.setAttribute('style', 'visibility:hidden')
-            })
-        }
-    }
-
-    function get_snippets_data() {
-        let s = []
-        list.childNodes.forEach(c => {
-            s.push({
-                key: c.dataset.key,
-                store: c.dataset.store,
-                title: c.innerText
-            })
-        })
-        return s
-    }
-
-    let saveLabelDelay = null
-    function start_save_label() {
-        saveLabel.setAttribute('style', 'display:inline-block')
-        if (saveLabelDelay != null) {
-            clearTimeout(saveLabelDelay)
-        }
-        saveLabelDelay = setTimeout(() => {
-            saveLabel.setAttribute('style', 'display:none')
-        }, 3000);
-    }
-
-    let deleteLabelDelay = null
-    function start_delete_label() {
-        deleteLabel.setAttribute('style', 'display:inline-block')
-        if (deleteLabelDelay != null) {
-            clearTimeout(deleteLabelDelay)
-        }
-        deleteLabelDelay = setTimeout(() => {
-            deleteLabel.setAttribute('style', 'display:none')
-        }, 3000);
-    }
-
-    function save_to_storage() {
-        let s = get_snippets_data()
-        if (s.length < 1) {
-            localStorage.removeItem(storageKey)
-        } else {
-            localStorage.setItem(storageKey, JSON.stringify(s))
-        }
+        enableSnippetButtons(false)
     }
 
     function save_editor() {
         if (editor.value == null || editor.value == "") {
             delete_current_snip()
-            return
+            return -1
         }
 
         const data = btoa(editor.value)
-
         if (currentSnip != null) {
             currentSnip.dataset.store = data
         } else {
@@ -108,12 +47,13 @@
             let nmi = make_li(Date.now(), title, data)
             list.appendChild(nmi)
             load_snip(nmi)
-            deleteButtonVisibility(true)
+            enableSnippetButtons(true)
         }
 
-        save_to_storage()
-    }
+        save_to_storage(storageKey)
 
+        return 1
+    }
 
     /**
      * Creates a list element for a snippet
@@ -132,13 +72,14 @@
         li.onkeydown = e => {
             if (e.key == 'Enter' || e.code == 'Enter' || e.key == 'Tab' || e.code == "Tab") {
                 e.preventDefault()
-                save_to_storage()
+                save_to_storage(storageKey)
                 editor.focus()
             }
         }
         li.onclick = e => {
             save_editor()
             load_snip(li)
+            enableSnippetButtons(true)
         }
         return li
     }
@@ -169,35 +110,51 @@
             clearTimeout(autosave)
         }
         autosave = setTimeout(() => {
-            save_editor()
+            if (save_editor() < 0) {
+                deleteNotification.start()
+            } else {
+                saveNotification.start()
+            }
             autosaveCache = editor.value
-            start_save_label()
         }, heartbeat);
     }
 
-    /**
-     * Set up + New Snippet buttons
-     */
-    Array.from(newButtons).forEach(b => {
-        b.onclick = () => {
-            save_editor()
-            load_snip(null)
+    const newButtons = new ButtonType('new', () => {
+        save_editor()
+        load_snip(null)
+        enableSnippetButtons(false)
+    })
+
+    const deleteButtons = new ButtonType("delete", () => {
+        if (confirm("Are you sure you want to delete this snippet? This cannot be undone.")) {
+            delete_current_snip()
+            deleteNotification.start()
+        } else {
+            editor.focus()
         }
     })
 
-    /**
-     * Set up delete buttons
-     */
-    Array.from(deleteButtons).forEach(b => {
-        b.onclick = () => {
-            if (confirm("Are you sure you want to delete this snippet? This cannot be undone.")) {
-                delete_current_snip()
-                start_delete_label()
-            } else {
-                editor.focus()
-            }
-        }
+    const shareButtons = new ButtonType("share", () => {
+        let link = "//" + window.location.host + window.location.pathname;
+        link += "?i="+ btoa(JSON.stringify({
+            key: currentSnip.dataset.key,
+            store: currentSnip.dataset.store,
+            title: currentSnip.innerText
+        }))
+        navigator.clipboard.writeText(link)
+        linkCopiedNotification.start()
     })
+
+    const copyButtons = new ButtonType("copy", () => {
+        navigator.clipboard.writeText(editor.value)
+        snippetCopiedNotification.start()
+    })
+
+    function enableSnippetButtons(val) {
+        deleteButtons.setEnabled(val)
+        shareButtons.setEnabled(val)
+        copyButtons.setEnabled(val)
+    }
 
     /**
      * Load snippets from local storage
@@ -210,11 +167,21 @@
         }
     }
 
-    if (list.childNodes.length > 0) {
-        load_snip(list.lastChild)
-        deleteButtonVisibility(true)
-    } else {
-        deleteButtonVisibility(false)
+    /**
+     * Imports a snippet from a link
+     */
+    const params = new URLSearchParams(window.location.search)
+    if (params.has('i')) {
+        let snip = params.get('i')
+        snip = atob(snip)
+        snip = JSON.parse(snip)
+        if (snip) {
+            let nli = make_li(snip.key, snip.title + '[imported]', snip.store)
+            list.appendChild(nli)
+            load_snip(nli)
+            enableSnippetButtons(true)
+            snippetImportedNotification.start()
+        }
+        window.history.replaceState({}, document.title, "//" + window.location.host + window.location.pathname)
     }
-
 })()
