@@ -164,6 +164,28 @@ a {
     white-space: normal;
 }
 
+#tsnip-notifications {
+    position: fixed;
+    z-index: 999;
+    top:8px;
+    right:8px;
+    display:block;
+}
+#tsnip-notifications > span {
+    display:none;
+    background:var(--color-primary);
+    color:var(--color-light);
+    font-size:1em;
+    font-weight: 500;
+    border-radius: 1em;
+    text-shadow: 1px 2px 3px rgba(0,0,0,.5);
+    box-shadow: 1px 2px 3px rgba(0,0,0,.5);
+    padding:4px 24px;
+}
+#tsnip-notifications > #tsnip-delete-label {
+    background:var(--color-danger);
+}
+
 @media (prefers-color-scheme: dark) {
 
     #tsnip-header {

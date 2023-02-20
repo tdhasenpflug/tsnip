@@ -4,6 +4,7 @@
     const newButtons = document.getElementsByClassName("tsnip-new")
     const deleteButtons = document.getElementsByClassName("tsnip-delete")
     const saveLabel = document.getElementById("tsnip-save-label")
+    const deleteLabel = document.getElementById("tsnip-delete-label")
 
     const storageKey = "tsnip"
     const heartbeat = 1000
@@ -30,12 +31,7 @@
         }
         load_snip(null)
         editor.focus()
-
-        if (list.childNodes.length > 0) {
-            deleteButtonVisibility(true)
-        } else {
-            deleteButtonVisibility(false)
-        }
+        deleteButtonVisibility(false)
     }
 
     function deleteButtonVisibility(val) {
@@ -64,12 +60,23 @@
 
     let saveLabelDelay = null
     function start_save_label() {
-        saveLabel.setAttribute('style', 'visibility:visible')
+        saveLabel.setAttribute('style', 'display:inline-block')
         if (saveLabelDelay != null) {
             clearTimeout(saveLabelDelay)
         }
         saveLabelDelay = setTimeout(() => {
-            saveLabel.setAttribute('style', 'visibility:hidden')
+            saveLabel.setAttribute('style', 'display:none')
+        }, 3000);
+    }
+
+    let deleteLabelDelay = null
+    function start_delete_label() {
+        deleteLabel.setAttribute('style', 'display:inline-block')
+        if (deleteLabelDelay != null) {
+            clearTimeout(deleteLabelDelay)
+        }
+        deleteLabelDelay = setTimeout(() => {
+            deleteLabel.setAttribute('style', 'display:none')
         }, 3000);
     }
 
@@ -179,6 +186,7 @@
         b.onclick = () => {
             if (confirm("Are you sure you want to delete this snippet? This cannot be undone.")) {
                 delete_current_snip()
+                start_delete_label()
             } else {
                 editor.focus()
             }
