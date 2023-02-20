@@ -3,20 +3,78 @@
     const editor = document.getElementById("tsnip-editor")
     const newButtons = document.getElementsByClassName("tsnip-new")
     const deleteButtons = document.getElementsByClassName("tsnip-delete")
+    const saveLabel = document.getElementById("tsnip-save-label")
 
     const storageKey = "tsnip"
     const heartbeat = 1000
 
-    let currentSnip = null;
+    let currentSnip = null
 
-    function save_to_storage() {
+    function load_snip(snip) {
+        list.childNodes.forEach(el => {
+            el.classList = []
+        })
+        currentSnip = snip
+
+        if (snip != null) {
+            editor.value = atob(currentSnip.dataset.store)
+            currentSnip.classList = ['current']
+        } else {
+            editor.value = ""
+        }
+    }
+
+    function delete_current_snip() {
+        if (currentSnip != null) {
+            list.removeChild(currentSnip)
+        }
+        load_snip(null)
+        editor.focus()
+
+        if (list.childNodes.length > 0) {
+            deleteButtonVisibility(true)
+        } else {
+            deleteButtonVisibility(false)
+        }
+    }
+
+    function deleteButtonVisibility(val) {
+        if (val) {
+            Array.from(deleteButtons).forEach(bt => {
+                bt.setAttribute('style', 'visibility:visible')
+            })
+        } else {
+            Array.from(deleteButtons).forEach(bt => {
+                bt.setAttribute('style', 'visibility:hidden')
+            })
+        }
+    }
+
+    function get_snippets_data() {
         let s = []
         list.childNodes.forEach(c => {
             s.push({
                 key: c.dataset.key,
-                store: c.dataset.store
+                store: c.dataset.store,
+                title: c.innerText
             })
         })
+        return s
+    }
+
+    let saveLabelDelay = null
+    function start_save_label() {
+        saveLabel.setAttribute('style', 'visibility:visible')
+        if (saveLabelDelay != null) {
+            clearTimeout(saveLabelDelay)
+        }
+        saveLabelDelay = setTimeout(() => {
+            saveLabel.setAttribute('style', 'visibility:hidden')
+        }, 3000);
+    }
+
+    function save_to_storage() {
+        let s = get_snippets_data()
         if (s.length < 1) {
             localStorage.removeItem(storageKey)
         } else {
@@ -26,30 +84,10 @@
 
     function save_editor() {
         if (editor.value == null || editor.value == "") {
-            let ni = 0
-            if (currentSnip != null) {
-                ni = Array.from(list.childNodes).indexOf(currentSnip)
-                list.removeChild(currentSnip)
-                editor.value = ""
-                currentSnip = null
-                if (ni > list.childNodes.length - 1) {
-                    ni = list.childNodes.length - 1
-                }
-            }
-            if (list.childNodes.length > 0) {
-                currentSnip = list.childNodes.item(ni)
-                editor.value = atob(currentSnip.dataset.store)
-                currentSnip.classList = ['current']
-                Array.from(deleteButtons).forEach(bt => {
-                    bt.setAttribute('style', 'visibility:visible')
-                })
-            } else {
-                Array.from(deleteButtons).forEach(bt => {
-                    bt.setAttribute('style', 'visibility:hidden')
-                })
-            }
+            delete_current_snip()
             return
         }
+
         const data = btoa(editor.value)
 
         if (currentSnip != null) {
@@ -59,53 +97,40 @@
             if (title.indexOf('\n') >= 0) {
                 title = title.slice(0,title.indexOf('\n'))
             }
-            let nmi = make_li(make_key(title), title, data)
+            let nmi = make_li(Date.now(), title, data)
             list.appendChild(nmi)
-            currentSnip = nmi
-            list.childNodes.forEach(el => {
-                el.classList = []
-            })
-            nmi.classList = ['current']
+            load_snip(nmi)
+            deleteButtonVisibility(true)
         }
 
         save_to_storage()
     }
 
-    function make_key(decoded_key) {
-        return btoa(decoded_key + '-' + Date.now())
-    }
 
-    function remove_key_tag(encoded_key) {
-        let s = atob(encoded_key)
-        return s.slice(0, s.lastIndexOf('-'))
-    }
-
-    function make_li(key, title, store) {
+    /**
+     * Creates a list element for a snippet
+     * @param {string} id 
+     * @param {string} title 
+     * @param {string} store 
+     * @returns 
+     */
+    function make_li(id, title, store) {
         let li = document.createElement('li')
         li.dataset.store = store
-        li.dataset.key = key
+        li.dataset.key = btoa(`l-${id}`)
         li.innerText = title
         li.contentEditable = true
         li.spellcheck = false
-
-        let liautosave = null
-        li.onkeyup = function(e) {
-            li.dataset.key = make_key(li.innerText)
-            if (liautosave != null) {
-                clearTimeout(liautosave)
-            }
-            liautosave = setTimeout(() => {
+        li.onkeydown = e => {
+            if (e.key == 'Enter' || e.code == 'Enter' || e.key == 'Tab' || e.code == "Tab") {
+                e.preventDefault()
                 save_to_storage()
-            }, heartbeat);
+                editor.focus()
+            }
         }
-        li.onclick = function(e) {
+        li.onclick = e => {
             save_editor()
-            list.childNodes.forEach(el => {
-                el.classList = []
-            })
-            li.classList = ['current']
-            currentSnip = this
-            editor.value = atob(this.dataset.store)
+            load_snip(li)
         }
         return li
     }
@@ -118,8 +143,8 @@
         if (e.key == 'Tab' || e.code == "Tab") {
             e.preventDefault()
             let si = editor.selectionStart
-            editor.value = editor.value.slice(0,si) + '\t' + editor.value.slice(si)
-            editor.selectionStart = editor.selectionEnd = si + 1
+            editor.value = editor.value.slice(0,si) + '    ' + editor.value.slice(si)
+            editor.selectionStart = editor.selectionEnd = si + 4
         }
     }
 
@@ -131,7 +156,10 @@
         if (autosave != null) {
             clearTimeout(autosave)
         }
-        autosave = setTimeout(save_editor, heartbeat);
+        autosave = setTimeout(() => {
+            save_editor()
+            start_save_label()
+        }, heartbeat);
     }
 
     /**
@@ -140,11 +168,7 @@
     Array.from(newButtons).forEach(b => {
         b.onclick = () => {
             save_editor()
-            currentSnip = null
-            editor.value = ""
-            list.childNodes.forEach(el => {
-                el.classList = []
-            })
+            load_snip(null)
         }
     })
 
@@ -153,25 +177,11 @@
      */
     Array.from(deleteButtons).forEach(b => {
         b.onclick = () => {
-            list.removeChild(currentSnip)
-            currentSnip = null
-            editor.value = ""
-            save_to_storage()
-
-            if (list.childNodes.length > 0) {
-                currentSnip = list.firstChild
-                editor.value = atob(currentSnip.dataset.store)
-                currentSnip.classList = ['current']
-                Array.from(deleteButtons).forEach(bt => {
-                    bt.setAttribute('style', 'visibility:visible')
-                })
+            if (confirm("Are you sure you want to delete this snippet? This cannot be undone.")) {
+                delete_current_snip()
             } else {
-                Array.from(deleteButtons).forEach(bt => {
-                    bt.setAttribute('style', 'visibility:hidden')
-                })
+                editor.focus()
             }
-
-            save_editor()
         }
     })
 
@@ -182,22 +192,15 @@
     if (saved) {
         const jsave = JSON.parse(saved)
         for(let o of jsave) {
-            let li = make_li(o.key, remove_key_tag(o.key), o.store || "")
-            list.appendChild(li)
+            list.appendChild(make_li(o.key, o.title, o.store))
         }
     }
 
     if (list.childNodes.length > 0) {
-        currentSnip = list.firstChild
-        editor.value = atob(currentSnip.dataset.store)
-        currentSnip.classList = ['current']
-        Array.from(deleteButtons).forEach(bt => {
-            bt.setAttribute('style', 'visibility:visible')
-        })
+        load_snip(list.lastChild)
+        deleteButtonVisibility(true)
     } else {
-        Array.from(deleteButtons).forEach(bt => {
-            bt.setAttribute('style', 'visibility:hidden')
-        })
+        deleteButtonVisibility(false)
     }
 
 })()

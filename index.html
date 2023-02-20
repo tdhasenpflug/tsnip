@@ -1,28 +1,32 @@
 <!doctype html>
 <html>
     <head>
-        <title>Tsnip</title>
+        <title>tSnip</title>
 
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link href="css/tsnip.min.css" type="text/css" rel="stylesheet" />
+        
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,300;0,500;0,700;0,900;1,100;1,300;1,500;1,700;1,900&family=Roboto+Mono:wght@300;500&display=swap" rel="stylesheet">
+
+        <link href="css/tsnip.css" type="text/css" rel="stylesheet" />
     </head>
     <body>
-        <header id="tsnip-header">
-            <h1>TSnip <span>Snippet Keeper</span></h1>
-            <div class="toolbar">
-                <button class="btn tsnip-delete">Delete Snippet</button>
-                <button class="btn tsnip-new">+ New Snippet</button>
-            </div>
-        </header>
         <aside id="tsnip-menu">
-            <h2>Snippets</h2>
+            <header id="tsnip-header">
+                <h1>tSnip</h1>
+                <h2>Snippet Keeper</h2>
+            </header>
+            <button class="btn tsnip-new">New Snippet</button>
+            <button class="btn tsnip-delete">Delete Snippet</button>
+            <h3>Snippets</h3>
             <ul id="tsnip-list"></ul>
-            <button class="btn tsnip-new">+ New Snippet</button>
         </aside>
         <main id="tsnip">
-            <textarea id="tsnip-editor" spellcheck="false" placeholder="Type or paste your snippet text here. Rename snippets by editing their title in the left menu."></textarea>
+            <textarea id="tsnip-editor" spellcheck="false" placeholder="Type or paste your snippet text here. Rename snippets by editing their title in the left menu." autofocus></textarea>
         </main>
         <footer>
+
             <script src="js\tsnip.js" type="text/javascript"></script>
         </footer>
     </body>
