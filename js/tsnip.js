@@ -23,6 +23,7 @@
         } else {
             editor.value = ""
         }
+        autosaveCache = editor.value
     }
 
     function delete_current_snip() {
@@ -159,12 +160,17 @@
      * Editor autosave
      */
     let autosave = null;
+    let autosaveCache = ""
     editor.onkeyup = (e) => {
+        if (autosaveCache == editor.value) {
+            return;
+        }
         if (autosave != null) {
             clearTimeout(autosave)
         }
         autosave = setTimeout(() => {
             save_editor()
+            autosaveCache = editor.value
             start_save_label()
         }, heartbeat);
     }
